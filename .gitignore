@@ -1,0 +1,5 @@
+*.pyc
+.idea
+AgentAnswers.csv
+ProblemResults.csv
+SetResults.csv
