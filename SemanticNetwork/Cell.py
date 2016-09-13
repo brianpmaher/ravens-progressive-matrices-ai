@@ -1,6 +1,5 @@
 from Node import SemanticNetworkNode
 
-
 # A single RPM problem cell.
 class SemanticNetworkCell:
     def __init__(self, ravens_figure):

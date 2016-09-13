@@ -16,7 +16,7 @@ class SemanticNetworkNode:
         self.ravens_object = ravens_object
         self.properties = {}
         self.relations = {}
-        self.transformation = ''
+        self.transformation = {}
         self.id = 0
 
         # set attributes for each object
@@ -39,24 +39,24 @@ class SemanticNetworkNode:
                 else:
                     self.relations[attr_key] = []
 
-    def __is_unchanged(self, node):
+    def __is_unchanged(self, node, direction):
         if self.properties == node.properties:
             node.id = self.id
-            self.transformation = 'unchanged'
+            self.transformation[direction] = 'unchanged'
             return True
         return False
 
     def __is_reflected(self, node):
-        pass
+        return False
 
     def __is_rotated(self, node):
-        pass
+        return False
 
     def __is_scaled(self, node):
-        pass
+        return False
 
     def __is_deleted(self, node):
-        pass
+        return False
 
     def __is_shape_changed(self, node):
-        pass
+        return False

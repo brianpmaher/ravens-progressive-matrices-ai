@@ -24,7 +24,7 @@ class Agent:
             return self.SKIP
 
         semantic_network = SemanticNetwork(problem)
-        semantic_network.generate_transformation()
+        semantic_network.generate_transformations()
         #solutions = solution_figures(problem.figures)
 
         return answer

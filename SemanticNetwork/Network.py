@@ -1,9 +1,9 @@
 from Cell import SemanticNetworkCell
 
-
 # The entire RPM problem network.
 class SemanticNetwork:
-    GROUPS_2x2 = ['AB', 'AC']
+    ROWS_2X2 = ['AB', 'CD']
+    COLUMNS_2X2 = ['AC', 'BD']
 
     # Extracts figures that match keys.
     @staticmethod
@@ -30,20 +30,37 @@ class SemanticNetwork:
         self.ravens_problem = ravens_problem
         self.problem_figures = \
             SemanticNetwork.__problem_figures(ravens_problem.figures)
+        self.cells = {}
         self.solution_figures = \
             SemanticNetwork.__solution_figures(ravens_problem.figures)
-        self.cells = {}
+        self.solution_cell = ''
+        self.solution_cells = {}
 
-        # generate cells from each figure
+        # generate problem cells from each figure
         for problem_figure in self.problem_figures:
             self.cells[problem_figure.name] = \
                 SemanticNetworkCell(problem_figure)
 
-        # determine the cell being solved for and generate an empty cell
+        # determine the cell being solved for
         if ravens_problem.problemType == '2x2':
             self.solution_cell = 'D'
         else:  # 3x3
             self.solution_cell = 'I'
+            raise NotImplementedError('3x3 matrices are not supported yet')
+
+        # generate solution_cells
+        for solution_figure in self.solution_figures:
+            self.solution_cells[solution_figure.name] = \
+                SemanticNetworkCell(solution_figure)
+
+    def __get_compare_direction(self, cell1, cell2):
+        pair = cell1.ravens_figure.name + cell2.ravens_figure.name
+        if self.ravens_problem.problemType == '2x2':
+            if pair in SemanticNetwork.ROWS_2X2:
+                return 'row'
+            elif pair in SemanticNetwork.COLUMNS_2X2:
+                return 'column'
+        else: # 3x3
             raise NotImplementedError('3x3 matrices are not supported yet')
 
     def __id_and_transform(self, previous_cell, current_cell):
@@ -53,20 +70,26 @@ class SemanticNetwork:
                     continue
                 for prev_cell_node_transform in \
                         prev_cell_node.TRANSFORMATIONS:
-                    if prev_cell_node_transform['function'](cur_cell_node):
+                    direction = self \
+                        .__get_compare_direction(previous_cell, current_cell)
+                    if prev_cell_node_transform['function'](
+                            cur_cell_node, direction):
                         break
 
-    def generate_transformation(self):
+    def generate_transformations(self):
         # identify objects in cell 'A'
         self.cells['A'].init_ids()
         if self.ravens_problem.problemType == '2x2':
-            for group in SemanticNetwork.GROUPS_2x2:
+            groups = SemanticNetwork.ROWS_2X2 + SemanticNetwork.COLUMNS_2X2
+            for group in groups:
                 previous_cell = None
                 for cell_name in group:
+                    # if we're comparing the test cell, break the loop
+                    if self.solution_cell in group:
+                        break
                     current_cell = self.cells[cell_name]
                     if not current_cell.nodes_identified:
                         self.__id_and_transform(previous_cell, current_cell)
                     previous_cell = current_cell
         else:  # 3x3
             raise NotImplementedError('3x3 matrices are not supported yet')
-
