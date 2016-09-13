@@ -13,8 +13,6 @@ class Agent:
     # are also the Names of the individual RavensFigures, obtained through
     # RavensFigure.getName(). A a negative number is returned to skip a problem.
     def Solve(self, problem):
-        answer = self.SKIP
-
         DEBUG_PROBLEMS = ['Basic Problem B-01']
 
         # skip any problems that are 3x3 or do not have verbal representations
@@ -25,6 +23,7 @@ class Agent:
 
         semantic_network = SemanticNetwork(problem)
         semantic_network.generate_transformations()
-        #solutions = solution_figures(problem.figures)
+        semantic_network.generate_solution_cell()
+        solution = semantic_network.solve()
 
-        return answer
+        return solution['answer']

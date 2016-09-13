@@ -1,9 +1,15 @@
 from Cell import SemanticNetworkCell
+from Node import SemanticNetworkNode
+
+FIRST = 0
 
 # The entire RPM problem network.
 class SemanticNetwork:
     ROWS_2X2 = ['AB', 'CD']
     COLUMNS_2X2 = ['AC', 'BD']
+    SOLUTION_MAP_2x2 = {'AB': dict(direction='row', solution_pair='CD'),
+                        'AC': dict(direction='column', solution_pair='BD')}
+    SOLUTION_THRESHOLD = 1.00 # percentage match for solution to be accepted
 
     # Extracts figures that match keys.
     @staticmethod
@@ -33,7 +39,8 @@ class SemanticNetwork:
         self.cells = {}
         self.solution_figures = \
             SemanticNetwork.__solution_figures(ravens_problem.figures)
-        self.solution_cell = ''
+        self.solution_cell_name = ''
+        self.solution_cell = None
         self.solution_cells = {}
 
         # generate problem cells from each figure
@@ -43,9 +50,9 @@ class SemanticNetwork:
 
         # determine the cell being solved for
         if ravens_problem.problemType == '2x2':
-            self.solution_cell = 'D'
+            self.solution_cell_name = 'D'
         else:  # 3x3
-            self.solution_cell = 'I'
+            self.solution_cell_name = 'I'
             raise NotImplementedError('3x3 matrices are not supported yet')
 
         # generate solution_cells
@@ -72,7 +79,7 @@ class SemanticNetwork:
                         prev_cell_node.TRANSFORMATIONS:
                     direction = self \
                         .__get_compare_direction(previous_cell, current_cell)
-                    if prev_cell_node_transform['function'](
+                    if prev_cell_node_transform['compare'](
                             cur_cell_node, direction):
                         break
 
@@ -85,7 +92,7 @@ class SemanticNetwork:
                 previous_cell = None
                 for cell_name in group:
                     # if we're comparing the test cell, break the loop
-                    if self.solution_cell in group:
+                    if self.solution_cell_name in group:
                         break
                     current_cell = self.cells[cell_name]
                     if not current_cell.nodes_identified:
@@ -93,3 +100,26 @@ class SemanticNetwork:
                     previous_cell = current_cell
         else:  # 3x3
             raise NotImplementedError('3x3 matrices are not supported yet')
+
+    def generate_solution_cell(self):
+        self.solution_cell = SemanticNetworkCell(None)
+        for cell_pair, application in \
+                SemanticNetwork.SOLUTION_MAP_2x2.iteritems():
+            for node in self.cells[cell_pair[FIRST]].nodes.itervalues():
+                apply_node = self.cells[application['solution_pair'][FIRST]] \
+                    .nodes_by_id()[node.id]
+                transform_id = node.transform_index_from_name(
+                    node.transformations[application['direction']])
+                solution_cell_nodes_by_id = self.solution_cell.nodes_by_id()
+                solution_node = None
+                if node.id in solution_cell_nodes_by_id:
+                    solution_node = solution_cell_nodes_by_id[node.id]
+                solution_node = apply_node \
+                    .TRANSFORMATIONS[transform_id]['transform'](solution_node)
+                self.solution_cell.add_node(solution_node)
+
+    def solve(self):
+        for cell_name, cell in self.solution_cells.iteritems():
+            solution_match = self.solution_cell.compare_with(cell)
+            if solution_match >= SemanticNetwork.SOLUTION_THRESHOLD:
+                return dict(answer=int(cell_name), theshold=solution_match)
