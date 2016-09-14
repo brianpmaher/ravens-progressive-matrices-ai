@@ -299,23 +299,24 @@ class SemanticNetwork:
                 transform_id = node.transform_index_from_name(
                     node.transformations[application['direction']])
                 solution_cell_nodes_by_id = self.solution_cell.nodes_by_id()
-                solution_node = None
 
                 # Check if the object ID has already been inserted into the
                 # solution cell. If it has, just update the object with the new
                 # transformation instead of generating a new object.
                 if node.id in solution_cell_nodes_by_id:
                     solution_node = solution_cell_nodes_by_id[node.id]
-                # Apply the transformation from the prevous node to the node in
-                # the solution cell. It is important that the solution node is
-                # not modified beyond the minimum necessary for the
-                # transformation.
-                solution_node = apply_node \
-                    .TRANSFORMATIONS[transform_id]['transform'](solution_node)
-                # TODO FIX THIS BUG:
-                # We're inserting a new solution node, even if the node's ID
-                # already exists in the solution cell.
-                self.solution_cell.add_node(solution_node)
+                    # Apply the transformation from the previous node to the
+                    # node in the solution cell. It is important that the
+                    # solution node is not modified beyond the minimum necessary
+                    # for the transformation.
+                    solution_node = apply_node \
+                        .TRANSFORMATIONS[transform_id]['transform'](
+                            solution_node)
+                    self.solution_cell.update_node(solution_node)
+                else:
+                    solution_node = apply_node \
+                        .TRANSFORMATIONS[transform_id]['transform'](None)
+                    self.solution_cell.add_node(solution_node)
 
     def solve(self):
         """Compare the generated solution cell with each possible solution and

@@ -27,14 +27,16 @@ class Agent:
                 Can return a negative number to skip the problem.
         """
 
-        DEBUG_PROBLEMS = ['Basic Problem B-01']  # TODO: remove
+        DEBUG_PROBLEMS = [  # TODO: remove
+            'Basic Problem B-01'
+        ]
 
         # Project 1 only: skip any problems that are 3x3 or do not have verbal
         # representations
         if problem.problemType == '3x3' or not problem.hasVerbal:
-            return self.SKIP
+            return Agent.SKIP
         elif problem.name not in DEBUG_PROBLEMS:
-            return self.SKIP
+            return Agent.SKIP
 
         # Generate the semantic network nodes and relationships
         semantic_network = SemanticNetwork(problem)
@@ -50,4 +52,6 @@ class Agent:
         # Get a solution along with a confidence level.
         solution = semantic_network.solve()
 
+        if solution is None:
+            return Agent.SKIP
         return solution['answer']

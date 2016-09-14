@@ -73,6 +73,20 @@ class SemanticNetworkCell:
             node_name = chr(ord(self.nodes.keys()[-1])+1)
         self.nodes[node_name] = node
 
+    def update_node(self, node):
+        """Updates an existing node with the one passed in.
+
+        The update compares the node's ID with node's IDs in this cell. If a
+        match is found, then we update the existing node with the new one.
+
+        Args:
+            node (SemanticNetworkNode): The node to replace the existing node.
+        """
+
+        for key, self_node in self.nodes.iteritems():
+            if self_node.id is node.id:
+                self.nodes[key] = node
+
     def compare_with(self, cell):
         """Compares this cell with the cell passed in.
 
@@ -89,8 +103,8 @@ class SemanticNetworkCell:
         if len(self.nodes) is not len(cell.nodes):
             return 0.0
 
-        for self_node in self.nodes:
-            for cell_node in cell.nodes:
+        for self_node in self.nodes.itervalues():
+            for cell_node in cell.nodes.itervalues():
                 # Skip any node we've already identified
                 if cell_node.id is not 0:
                     continue
