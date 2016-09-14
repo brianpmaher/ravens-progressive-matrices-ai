@@ -193,6 +193,9 @@ class SemanticNetwork:
             current_cell (SemanticNetworkCell): Current cell to compare with.
         """
 
+        direction = self \
+            .__get_compare_direction(previous_cell, current_cell)
+
         # Start checking each transformation. The transforms are ordered so that
         # the most likely transformations are compared first.
         for transform_id in range(len(SemanticNetworkNode().TRANSFORMATIONS)):
@@ -205,8 +208,6 @@ class SemanticNetwork:
 
                     prev_cell_node_transform = \
                         prev_cell_node.TRANSFORMATIONS[transform_id]
-                    direction = self \
-                        .__get_compare_direction(previous_cell, current_cell)
                     if prev_cell_node_transform['compare'](
                             cur_cell_node, direction):
                         break  # we've found a match, move on
@@ -300,7 +301,7 @@ class SemanticNetwork:
                     # for the transformation.
                     solution_node = apply_node \
                         .TRANSFORMATIONS[transform_id]['transform'](
-                            solution_node)
+                            solution_node, application['direction'])
                     self.solution_cell.update_node(solution_node)
                 else:
                     solution_node = apply_node \

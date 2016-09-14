@@ -28,7 +28,7 @@ class Agent:
         """
 
         debug_problems = [  # TODO: remove
-            'Basic Problem B-01', 'Basic Problem B-02'
+            'Basic Problem B-01', 'Basic Problem B-02', 'Basic Problem B-03'
         ]
 
         # Project 1 only: skip any problems that are 3x3 or do not have verbal
