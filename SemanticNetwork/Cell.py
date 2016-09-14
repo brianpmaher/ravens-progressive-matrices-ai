@@ -65,6 +65,7 @@ class SemanticNetworkCell:
         Args:
             node (SemanticNetworkNode): The node to add to this cell.
         """
+
         if len(self.nodes.keys()) == 0:
             node_name = 'a'
         else:

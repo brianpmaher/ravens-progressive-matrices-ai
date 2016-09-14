@@ -199,6 +199,7 @@ class SemanticNetworkNode:
         Returns:
             (int): The transform index for the name.
         """
+
         for i in range(0, len(self.TRANSFORMATIONS)):
             if self.TRANSFORMATIONS[i]['name'] == transform_name:
                 return i
@@ -212,6 +213,7 @@ class SemanticNetworkNode:
         Returns:
             (bool): Whether or not this node is the same as the node passed in.
         """
+
         if self.properties == node.properties:
             return True
         return False

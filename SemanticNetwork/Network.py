@@ -148,6 +148,7 @@ class SemanticNetwork:
             (list(RavensFigure)): A list of RavensFigure that match the solution
                 keys.
         """
+
         solution_keys = ['1', '2', '3', '4', '5', '6']
         return SemanticNetwork.__extract_figures(all_figures, solution_keys)
 
@@ -162,6 +163,7 @@ class SemanticNetwork:
         Returns:
             (str): 'row' or 'column'.
         """
+
         pair = cell1.ravens_figure.name + cell2.ravens_figure.name
         if self.ravens_problem.problemType == '2x2':
             if pair in SemanticNetwork.ROWS_2X2:
