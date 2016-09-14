@@ -98,7 +98,7 @@ class SemanticNetworkCell:
                 passed in.
         """
 
-        match, total = 0, 0
+        match, total = 0, len(cell.nodes)
         # For now, start by filtering out any cells with more nodes.
         if len(self.nodes) is not len(cell.nodes):
             return 0.0
@@ -115,7 +115,6 @@ class SemanticNetworkCell:
                     # the generated solution cell with the compared possible
                     # solution cell.
                     cell_node.id = self_node.id
-                    match, total = match + 1, total + 1
-                else:
-                    total += 1
+                    match += 1
+
         return float(match) / float(total)

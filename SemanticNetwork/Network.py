@@ -1,4 +1,5 @@
 from Cell import SemanticNetworkCell
+from Node import SemanticNetworkNode
 
 
 FIRST = 0  # constant to verbally represent the first element in a list
@@ -192,18 +193,18 @@ class SemanticNetwork:
             current_cell (SemanticNetworkCell): Current cell to compare with.
         """
 
-        # Compare each object in the previous cell...
-        for prev_cell_node in previous_cell.nodes.itervalues():
-            # ...with each object in the current_cell.
-            for cur_cell_node in current_cell.nodes.itervalues():
-                if cur_cell_node.id is not 0:  # IDs are 0 before being IDed
-                    continue
+        # Start checking each transformation. The transforms are ordered so that
+        # the most likely transformations are compared first.
+        for transform_id in range(len(SemanticNetworkNode().TRANSFORMATIONS)):
+            # Compare each object in the previous cell...
+            for prev_cell_node in previous_cell.nodes.itervalues():
+                # ...with each object in the current_cell.
+                for cur_cell_node in current_cell.nodes.itervalues():
+                    if cur_cell_node.id is not 0:  # IDs are 0 before being IDed
+                        continue
 
-                # Start checking the previous cell node with the current cell
-                # node against each transform type. The transforms are ordered
-                # so that the most likely transformations are compared first.
-                for prev_cell_node_transform in \
-                        prev_cell_node.TRANSFORMATIONS:
+                    prev_cell_node_transform = \
+                        prev_cell_node.TRANSFORMATIONS[transform_id]
                     direction = self \
                         .__get_compare_direction(previous_cell, current_cell)
                     if prev_cell_node_transform['compare'](
@@ -234,19 +235,7 @@ class SemanticNetwork:
                 previous_cell = None  # initialize the previous cell
                 for cell_name in group:
                     current_cell = self.cells[cell_name]
-                    # We don't want to compare with any cells that have already
-                    # been identified. In the case of 2x2 matrices, this works
-                    # to skip cell 'A'. But this is not a good solution for 3x3
-                    # matrix problem implementation. Cells that have already had
-                    # their nodes identified should still be used to generate
-                    # transformations.
-                    #       A B C       For example, cell 'E' in this case would
-                    #       D E F       still need to be checked against 'AE',
-                    #       G H I       'DE', and 'BE'.
-                    #
-                    # TODO: fix in 3x3 implementation, see above... This may or
-                    # may not by an issue because for now, this is only set for
-                    # cell 'A'.
+                    # This only applies to cell 'A'
                     if not current_cell.nodes_identified:
                         self.__id_and_transform(previous_cell, current_cell)
                     previous_cell = current_cell

@@ -68,10 +68,10 @@ class SemanticNetworkNode:
             identifier.
     """
 
-    PROPERTY_KEYS = ['shape', 'fill', 'size']
-    RELATION_KEYS = []
+    PROPERTY_KEYS = ['shape', 'fill', 'size', 'angle']
+    RELATION_KEYS = ['inside']
 
-    def __init__(self, ravens_object):
+    def __init__(self, ravens_object=None):
         self.TRANSFORMATIONS = [
             dict(name='unchanged',
                  weight=5,
