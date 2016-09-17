@@ -305,7 +305,8 @@ class SemanticNetwork:
                     self.solution_cell.update_node(solution_node)
                 else:
                     solution_node = apply_node \
-                        .TRANSFORMATIONS[transform_id]['transform'](None)
+                        .TRANSFORMATIONS[transform_id]['transform'](
+                            None, application['direction'])
                     self.solution_cell.add_node(solution_node)
 
     def solve(self):

@@ -70,12 +70,6 @@ class SemanticNetworkNode:
 
     PROPERTY_KEYS = ['shape', 'fill', 'size', 'angle']
     RELATION_KEYS = ['inside']
-    TRIANGLE_ROTATION_MAP = {
-        0: dict(column=90, row=-90),
-        90: dict(column=-90, row=90),
-        180: dict(column=90, row=-90),
-        270: dict(column=-90, row=90)
-    }
 
     def __init__(self, ravens_object=None):
         self.TRANSFORMATIONS = [
@@ -83,8 +77,7 @@ class SemanticNetworkNode:
                  weight=5,
                  compare=self.__is_unchanged,
                  transform=self.__apply_unchanged),
-            dict(name='reflected',
-                 weight=4,
+            dict(name='reflected', weight=4,
                  compare=self.__is_reflected,
                  transform=self.__apply_reflected),
             dict(name='rotated',
@@ -126,6 +119,79 @@ class SemanticNetworkNode:
                 else:
                     self.relations[attr_key] = []
 
+    @staticmethod
+    def __calculate_reflected_rotation(shape, angle, direction):
+        """Calculates the reflected rotation of the shape.
+
+        Reflections are dependant on the type of shape being reflected.
+        For example:
+            Circle:
+                Would be the same (unchanged).
+            Diamond:
+                Would be the same (unchanged).
+            Pac-man:
+                Would be a 180 degree rotation.
+            Plus:
+                Would be the same (unchanged).
+            Right Triangle:
+                A right triangle reflection is the same as a (+/-)90degree
+                rotation. Additionally, this rule is not enough; these rotations
+                must correspond to specific starting rotations and which axis
+                they are being rotated.
+                0   -> x: +90deg, y: -90deg        Note: these rules are hard-
+                90  -> x: -90deg, y: +90deg        coded. There is probably an
+                180 -> x: +90deg, y: -90deg        algorithm to do this more
+                270 -> x: -90deg, y: +90deg        precisely.
+            Square:
+                Would be the same (unchanged). It's possible that squares could
+                be rotated, in which case the reflection would be a (+/-)180deg
+                rotation, but that's not relevant fot the Basic problems.
+
+        Args:
+            shape (str): The shape being reflected.
+            angle (int): The starting angle of the shape being reflected.
+            direction (str): The direction of the reflection (row or column).
+
+        Returns:
+            (int): The new angle of the shape, when reflected.
+        """
+
+        pacman_reflection_map = {
+            0: dict(column=0, row=180),
+            45: dict(column=270, row=90),
+            90: dict(column=180, row=0),
+            135: dict(column=90, row=-90),
+            180: dict(column=0, row=-180),
+            225: dict(column=-90, row=90),
+            270: dict(column=-180, row=0),
+            315: dict(column=-270, row=-90)
+        }
+
+        right_triangle_reflection_map = {
+            0: dict(column=90, row=-90),
+            90: dict(column=-90, row=90),
+            180: dict(column=90, row=-90),
+            270: dict(column=-90, row=90)
+        }
+
+        # There may be a better algorithm for finding the reflection of all
+        # shapes... but for now, I'm just hard-coding the ones I come across.
+        if shape == 'circle':
+            reflected_rotation = 0
+        elif shape == 'diamond':
+            reflected_rotation = 0
+        elif shape == 'pac-man':
+            reflected_rotation = \
+                (angle + pacman_reflection_map[angle][direction]) % 360
+        elif shape == 'plus':
+            reflected_rotation = 0
+        elif shape == 'right triangle':
+            reflected_rotation = \
+                (angle + right_triangle_reflection_map[angle][direction]) % 360
+        elif shape == 'square':
+            reflected_rotation = 0
+        return reflected_rotation
+
     def __compare_property(self, property_name, node):
         """Compares the property from this node with the node passed in.
 
@@ -166,33 +232,12 @@ class SemanticNetworkNode:
     def __is_reflected(self, node, direction):
         """Check if the object is reflected.
 
-        Reflections are dependant on the type of shape being reflected.
-        For example:
-            Circle:
-                Would be the same (unchanged).
-            Diamond:
-                Would be the same (unchanged).
-            Pacman:
-                Would be a 180 degree rotation.
-            Plus:
-                Would be the same (unchanged).
-            Square:
-                Would be the same (unchanged). It's possible that squares could
-                be rotated, in which case the reflection would be a (+/-)180deg
-                rotation, but that's not relevant fot the Basic problems.
-            Triangle:
-                A triangle reflection is the same as a (+/-)90degree rotation.
-                Additionally, this rule is not enough; these rotations must
-                correspond to specific starting rotations and which axis they
-                are being rotated.
-                0   -> x: +90deg, y: -90deg        Note: these rules are hard-
-                90  -> x: -90deg, y: +90deg        coded. There is probably an
-                180 -> x: +90deg, y: -90deg        algorithm to do this more
-                270 -> x: -90deg, y: +90deg        precisely.
-
         Args:
             node (SemanticNetworkNode): The node to compare with.
             direction (str): The direction the node is relative to this node.
+
+        Returns:
+            (bool): Whether or not the node is reflected.
         """
 
         # Check to make sure all not rotation related properties are the same.
@@ -201,18 +246,27 @@ class SemanticNetworkNode:
         if self.__compare_property('shape', node) and \
                 self.__compare_property('size', node) and \
                 self.__compare_property('fill', node):
-            # TODO: deal with other shapes.
-            if self.properties['shape'] == 'right triangle':
-                my_rotation = int(self.properties['angle'])
-                reflected_rotation = \
-                    (my_rotation + SemanticNetworkNode
-                     .TRIANGLE_ROTATION_MAP[my_rotation][direction]) % 360
 
-                # TODO: deal with position for later problems.
-                if int(node.properties['angle']) == reflected_rotation:
-                    node.id = self.id
-                    self.transformations[direction] = 'reflected'
-                    return True
+            # Some shapes don't have angle property. For those shapes just give
+            # them an angle property.
+            if 'angle' not in self.properties:
+                self.properties['angle'] = '0'
+            if 'angle' not in node.properties:
+                node.properties['angle'] = '0'
+
+            # Get the rotation of the shape when it's been rotated.
+            reflected_rotation = \
+                SemanticNetworkNode.__calculate_reflected_rotation(
+                    self.properties['shape'], int(self.properties['angle']),
+                    direction
+                )
+
+            # Check if the calculated reflected rotation matches up with the
+            # angle of the node we're comparing against.
+            if int(node.properties['angle']) == reflected_rotation:
+                node.id = self.id
+                self.transformations[direction] = 'reflected'
+                return True
         return False
 
     def __is_rotated(self, node, direction):
@@ -260,23 +314,29 @@ class SemanticNetworkNode:
                 being applied.
 
         Returns:
-            (SemanticNetworkNode): A copy of this node, unchanged.
+            (SemanticNetworkNode): A copy of this node, reflected.
         """
 
-        # If the node doesn't exist yet, then just create it.
+        # If the node doesn't exist yet, then just create it as a replica of
+        # this node.
         if node is None:
             node = SemanticNetworkNode(None)
+            node.properties = self.properties
 
         node.id = self.id
-        node.properties = self.properties
 
-        my_rotation = int(self.properties['angle'])
+        # We want to give ourselves a default angle of 0 if the shape is a shape
+        # that doesn't have an angle for some reason.
+        if 'angle' not in self.properties:
+            self.properties['angle'] = '0'
+
         reflected_rotation = \
-            (my_rotation + SemanticNetworkNode
-             .TRIANGLE_ROTATION_MAP[my_rotation][direction]) % 360
+            SemanticNetworkNode.__calculate_reflected_rotation(
+                self.properties['shape'], int(self.properties['angle']),
+                direction
+            )
 
         node.properties['angle'] = str(reflected_rotation)
-
         return node
 
     def __apply_rotated(self, node, _direction=''):
@@ -314,6 +374,13 @@ class SemanticNetworkNode:
         Returns:
             (bool): Whether or not this node is the same as the node passed in.
         """
+
+        # Some shapes do not have an angle. For those shapes, lets consider the
+        # angle to be 0 for comparison.
+        if 'angle' not in self.properties:
+            self.properties['angle'] = '0'
+        if 'angle' not in node.properties:
+            node.properties['angle'] = '0'
 
         if self.properties == node.properties:
             return True
