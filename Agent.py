@@ -29,7 +29,7 @@ class Agent:
 
         debug_problems = [  # TODO: remove
             'Basic Problem B-01', 'Basic Problem B-02', 'Basic Problem B-03',
-            'Basic Problem B-04'
+            'Basic Problem B-04', 'Basic Problem B-05'
         ]
 
         # Project 1 only: skip any problems that are 3x3 or do not have verbal
@@ -38,6 +38,9 @@ class Agent:
             return Agent.SKIP
         elif problem.name not in debug_problems:
             return Agent.SKIP
+
+        if problem.name == 'Basic Problem B-05':
+            pass
 
         # Generate the semantic network nodes and relationships
         semantic_network = SemanticNetwork(problem)

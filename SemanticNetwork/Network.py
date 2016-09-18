@@ -283,11 +283,25 @@ class SemanticNetwork:
                 # to generate the solution cell's object.
                 apply_node = self.cells[application['solution_pair'][FIRST]] \
                     .nodes_by_id()[node.id]
+                # Apply the transformation from the node we're applying the
+                # transformation from, to the node we're applying the
+                # transformation to.
+                # For example:
+                #   When applying the transformation from A->B to C->D, we want
+                #   to store whatever transformation was applied from
+                #   node_A.transformations['row'] (A->B) to
+                #   node_C.transformations['row'] (C->D). This is important
+                #   because some transformations such as rotate and shape change
+                #   require additional information about the transformation;
+                #   such as which kind of shape change and how much rotation to
+                #   add.
+                apply_node.transformations[application['direction']] = \
+                    node.transformations[application['direction']]
                 # Transformations are in an ordered list. Map the
                 # transformation name to an index in order to fetch the
                 # transformation data.
                 transform_id = node.transform_index_from_name(
-                    node.transformations[application['direction']])
+                    node.transformations[application['direction']]['name'])
                 solution_cell_nodes_by_id = self.solution_cell.nodes_by_id()
 
                 # Check if the object ID has already been inserted into the

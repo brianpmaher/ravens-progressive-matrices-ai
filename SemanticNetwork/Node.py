@@ -54,9 +54,9 @@ class SemanticNetworkNode:
             Example format
 
                 transformations: {
-                    'row': 'unchanged',
-                    'column': 'rotated',
-                    'diagonal': 'shape changed'
+                    'row': dict(name='unchanged')
+                    'column': dict(name='rotated', rotation=90)
+                    'diagonal': dict(name='shape changed', shape='heart')
                 }
         id (int): An identifier that helps identify this node with nodes in
             other cells. When the nodes are first generated, they are given
@@ -68,7 +68,7 @@ class SemanticNetworkNode:
             identifier.
     """
 
-    PROPERTY_KEYS = ['shape', 'fill', 'size', 'angle']
+    PROPERTY_KEYS = ['shape', 'fill', 'size', 'angle', 'alignment']
     RELATION_KEYS = ['inside']
 
     def __init__(self, ravens_object=None):
@@ -92,7 +92,7 @@ class SemanticNetworkNode:
                  weight=1,
                  compare=self.__is_deleted,
                  transform=self.__apply_deleted),
-            dict(name='changed',
+            dict(name='shape changed',
                  weight=0,
                  compare=self.__is_shape_changed,
                  transform=self.__apply_shape_changed)
@@ -119,8 +119,14 @@ class SemanticNetworkNode:
                 else:
                     self.relations[attr_key] = []
 
+        # Some default properties
+        if 'angle' not in self.properties:
+            self.properties['angle'] = '0'
+        if 'alignment' not in self.properties:
+            self.properties['alignment'] = 'none'
+
     @staticmethod
-    def __calculate_reflected_rotation(shape, angle, direction):
+    def __calculate_reflected_angle(shape, angle, direction):
         """Calculates the reflected rotation of the shape.
 
         Reflections are dependant on the type of shape being reflected.
@@ -192,6 +198,32 @@ class SemanticNetworkNode:
             reflected_rotation = 0
         return reflected_rotation
 
+    @staticmethod
+    def __calculate_reflected_alignment(alignment, direction):
+        """Calculates the reflected alignment.
+
+        Args:
+            alignment (str): The alignment of the object being reflected.
+            direction (str): The direction of the reflection (row or column).
+
+        Returns:
+            (str): The new alignment of the reflected object.
+        """
+
+        alignment_map = {
+            'none': dict(column='none', row='none'),
+            'top': dict(column='bottom', row='top'),
+            'bottom': dict(column='top', row='bottom'),
+            'left': dict(column='left', row='right'),
+            'right': dict(column='right', row='left'),
+            'top-left': dict(column='bottom-left', row='top-right'),
+            'top-right': dict(column='bottom-right', row='top-left'),
+            'bottom-left': dict(column='top-left', row='bottom-right'),
+            'bottom-right': dict(column='top-right', row='bottom-left')
+        }
+
+        return alignment_map[alignment][direction]
+
     def __compare_property(self, property_name, node):
         """Compares the property from this node with the node passed in.
 
@@ -225,7 +257,7 @@ class SemanticNetworkNode:
 
         if self.same_as(node):
             node.id = self.id
-            self.transformations[direction] = 'unchanged'
+            self.transformations[direction] = dict(name='unchanged')
             return True
         return False
 
@@ -247,25 +279,25 @@ class SemanticNetworkNode:
                 self.__compare_property('size', node) and \
                 self.__compare_property('fill', node):
 
-            # Some shapes don't have angle property. For those shapes just give
-            # them an angle property.
-            if 'angle' not in self.properties:
-                self.properties['angle'] = '0'
-            if 'angle' not in node.properties:
-                node.properties['angle'] = '0'
-
-            # Get the rotation of the shape when it's been rotated.
+            # Get the rotation of the shape when it's been reflected.
             reflected_rotation = \
-                SemanticNetworkNode.__calculate_reflected_rotation(
+                SemanticNetworkNode.__calculate_reflected_angle(
                     self.properties['shape'], int(self.properties['angle']),
                     direction
                 )
 
+            # Get the alignment of the shape when it's been reflected.
+            reflected_alignment = \
+                SemanticNetworkNode.__calculate_reflected_alignment(
+                    self.properties['alignment'], direction
+                )
+
             # Check if the calculated reflected rotation matches up with the
             # angle of the node we're comparing against.
-            if int(node.properties['angle']) == reflected_rotation:
+            if int(node.properties['angle']) == reflected_rotation and \
+                    node.properties['alignment'] == reflected_alignment:
                 node.id = self.id
-                self.transformations[direction] = 'reflected'
+                self.transformations[direction] = dict(name='reflected')
                 return True
         return False
 
@@ -279,7 +311,22 @@ class SemanticNetworkNode:
         return False
 
     def __is_shape_changed(self, node, direction):
-        return True
+        """Check if an object's shape has changed.
+
+        Args:
+            node (SemanticNetworkNode): The node to compare with.
+            direction (str): The direction the node is relative to this node.
+
+        Returns:
+            (bool): Whether or not the node is reflected.
+        """
+
+        if self.properties['shape'] != node.properties['shape']:
+            node.id = self.id
+            self.transformations[direction] = \
+                dict(name='shape changed', shape=node.properties['shape'])
+            return True
+        return False
 
     def __apply_unchanged(self, node, _direction=''):
         """Applies the unchanged transformation onto this node.
@@ -295,7 +342,8 @@ class SemanticNetworkNode:
             (SemanticNetworkNode): A copy of this node, unchanged.
         """
 
-        # If the node doesn't exist yet, then just create it.
+        # If the node doesn't exist yet, then just create it as a replica of
+        # this node.
         if node is None:
             node = SemanticNetworkNode(None)
 
@@ -304,7 +352,7 @@ class SemanticNetworkNode:
         return node
 
     def __apply_reflected(self, node, direction):
-        """Applies the reflected transformation onto this node.i
+        """Applies the reflected transformation onto this node.
 
         Generates a node that is reflected from this node.
 
@@ -325,18 +373,21 @@ class SemanticNetworkNode:
 
         node.id = self.id
 
-        # We want to give ourselves a default angle of 0 if the shape is a shape
-        # that doesn't have an angle for some reason.
-        if 'angle' not in self.properties:
-            self.properties['angle'] = '0'
-
+        # Get the rotation of the shape when it's been reflected.
         reflected_rotation = \
-            SemanticNetworkNode.__calculate_reflected_rotation(
+            SemanticNetworkNode.__calculate_reflected_angle(
                 self.properties['shape'], int(self.properties['angle']),
                 direction
             )
 
+        # Get the alignment of the shape when it's been reflected.
+        reflected_alignment = \
+            SemanticNetworkNode.__calculate_reflected_alignment(
+                self.properties['alignment'], direction
+            )
+
         node.properties['angle'] = str(reflected_rotation)
+        node.properties['alignment'] = reflected_alignment
         return node
 
     def __apply_rotated(self, node, _direction=''):
@@ -348,8 +399,29 @@ class SemanticNetworkNode:
     def __apply_deleted(self, node, _direction=''):
         return None
 
-    def __apply_shape_changed(self, node, _direction=''):
-        return None
+    def __apply_shape_changed(self, node, direction):
+        """Applies the shape changed transformation onto this node.
+
+        Generates a node that is reflected from this node.
+
+        Args:
+            node (SemanticNetworkNode): The node to compare with.
+            direction (str): The direction this node's transformations are
+                being applied.
+
+        Returns:
+            (SemanticNetworkNode): A copy of this node, reflected.
+        """
+
+        # If the node doesn't exist yet, then just create it as a replica of
+        # this node.
+        if node is None:
+            node = SemanticNetworkNode(None)
+            node.properties = self.properties
+
+        node.id = self.id
+        node.properties['shape'] = self.transformations[direction]['shape']
+        return node
 
     def transform_index_from_name(self, transform_name):
         """Gets the transform index from the transform name.
@@ -374,13 +446,6 @@ class SemanticNetworkNode:
         Returns:
             (bool): Whether or not this node is the same as the node passed in.
         """
-
-        # Some shapes do not have an angle. For those shapes, lets consider the
-        # angle to be 0 for comparison.
-        if 'angle' not in self.properties:
-            self.properties['angle'] = '0'
-        if 'angle' not in node.properties:
-            node.properties['angle'] = '0'
 
         if self.properties == node.properties:
             return True
