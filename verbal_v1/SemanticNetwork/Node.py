@@ -14,10 +14,6 @@ class SemanticNetworkNode:
 
             Dictionary entries of transform objects:
                 name (str): The transformation name.
-                weight (int): Ranked weight for the transform type. This is used
-                    to compare the transform totals for a transformation or
-                    between cells. The heigher the weight score, the more likely
-                    the transformation.
                 compare (function): A function to compare the transformation
                     type with another node to determine if the transformation
                     matches.
@@ -74,26 +70,24 @@ class SemanticNetworkNode:
     def __init__(self, ravens_object=None):
         self.TRANSFORMATIONS = [
             dict(name='unchanged',
-                 weight=5,
                  compare=self.__is_unchanged,
                  transform=self.__apply_unchanged),
-            dict(name='reflected', weight=4,
+            dict(name='fill changed',
+                 compare=self.__is_fill_changed,
+                 transform=self.__apply_fill_changed),
+            dict(name='reflected',
                  compare=self.__is_reflected,
                  transform=self.__apply_reflected),
             dict(name='rotated',
-                 weight=3,
                  compare=self.__is_rotated,
                  transform=self.__apply_rotated),
             dict(name='scaled',
-                 weight=2,
                  compare=self.__is_scaled,
                  transform=self.__apply_scaled),
             dict(name='deleted',
-                 weight=1,
                  compare=self.__is_deleted,
                  transform=self.__apply_deleted),
             dict(name='shape changed',
-                 weight=0,
                  compare=self.__is_shape_changed,
                  transform=self.__apply_shape_changed)
         ]
@@ -261,6 +255,31 @@ class SemanticNetworkNode:
             return True
         return False
 
+    def __is_fill_changed(self, node, direction):
+        """Check if the object's fill has changed.
+
+        Args:
+            node (SemanticNetworkNode): The node to compare with.
+            direction (str): The direction the node is relative to this node.
+                Example: 'row', 'column', 'diagonal'
+
+        Returns:
+            (bool): Whether or not this node is unchanged when compared to the
+                other node.
+        """
+
+        if self.__compare_property('shape', node) and \
+                self.__compare_property('size', node) and \
+                self.__compare_property('fill', node) and \
+                self.properties['fill'] != node.properties['fill']:
+            node.id = self.id
+            # Set the fill transformation 'fill' property to determine what
+            # we expect the end result's fill to be ('yes' or 'no).
+            self.transformations[direction] = \
+                dict(name='fill', fill=node.properties['fill'])
+            return True
+        return False
+
     def __is_reflected(self, node, direction):
         """Check if the object is reflected.
 
@@ -350,6 +369,29 @@ class SemanticNetworkNode:
         node.id = self.id
         node.properties = self.properties
         return node
+
+    def __apply_fill_changed(self, node, direction):
+        """Applies the fill changed transformation onto this node.
+
+        Generates a node that is filled/unfilled from this node.
+
+        Args:
+            node (SemanticNetworkNode): The node to compare with.
+            direction (str): The direction this node's transformations are
+                being applied. (unused).
+
+        Returns:
+            (SemanticNetworkNode): A copy of this node, unchanged.
+        """
+
+        # If the node doesn't exist yet, then just create it as a replica of
+        # this node.
+        if node is None:
+            node = SemanticNetworkNode(None)
+            node.properties = self.properties
+
+        node.id = self.id
+        node.properties['fill'] = self.transformations[direction]['fill']
 
     def __apply_reflected(self, node, direction):
         """Applies the reflected transformation onto this node.
