@@ -7,6 +7,8 @@ SECOND = 1
 
 
 class Agent:
+    """AI agent driver for solving Raven's Progressive Matrices."""
+
     SKIP = -1
     PROBLEM_FIGURE_NAMES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
     SOLUTION_FIGURE_NAMES = ['1', '2', '3', '4', '5', '6']
