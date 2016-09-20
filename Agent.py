@@ -6,15 +6,9 @@ FIRST = 0
 SECOND = 1
 
 
-class Agent:
-    """AI agent driver for solving Raven's Progressive Matrices."""
-
-    SKIP = -1
-    PROBLEM_FIGURE_NAMES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
-    SOLUTION_FIGURE_NAMES = ['1', '2', '3', '4', '5', '6']
-
+class ImageUtils:
     @staticmethod
-    def pixel_match_percentage(image1_pixels, image2_pixels):
+    def match_percentage(image1_pixels, image2_pixels):
         """Compares two image's pixels and returns the percentage that those
         two pixel lists match.
 
@@ -34,6 +28,73 @@ class Agent:
             else:
                 total += 1
         return float(match) / float(total)
+
+
+class Transform:
+    @staticmethod
+    def match_unchanged(image1_data, image2_data):
+        return ImageUtils \
+            .match_percentage(image1_data['pixels'], image2_data['pixels'])
+
+    @staticmethod
+    def match_reflected(image1_data, image2_data):
+        pass
+
+    @staticmethod
+    def match_rotated(image1_data, image2_data):
+        pass
+
+    @staticmethod
+    def match_fill_changed(image1_data, image2_data):
+        pass
+
+    @staticmethod
+    def generate_transforms_data(image1_data, image2_data):
+        """Generates transformations along with percentage matches.
+
+        Args:
+            image1_data (dict): Dictionary of image data in the form:
+                dict(image, pixels).
+            image2_data (dict): Dictionary of image data in the form:
+                dict(image, pixels).
+
+        Return:
+            (dict): Dictionary of transform data in the form:
+                dict(transform, match).
+        """
+
+        return dict(
+            unchanged=Transform('unchanged', image1_data, image2_data),
+            #reflected=Transform('reflected', image1_data, image2_data),
+            #rotated=Transform('rotated', image1_data, image2_data),
+            #fill_changed=Transform('fill_changed', image1_data, image2_data)
+        )
+
+    def __init__(self, name, image1_data, image2_data):
+        self.transformations_map = {
+            'unchanged': Transform.match_unchanged,
+            'reflected': Transform.match_reflected,
+            'rotated': Transform.match_rotated,
+            'filled_changed': Transform.match_fill_changed
+        }
+
+        self.name = name
+        self.image1_data = image1_data
+        self.image2_data = image2_data
+        self.match = self.transformations_map[name](image1_data, image2_data)
+
+    def apply_and_compare(self, image1_data, image2_data):
+        """Applies this transformation to image1 and compares with image2."""
+
+        return self.transformations_map[self.name](image1_data, image2_data)
+
+
+class Agent:
+    """AI agent driver for solving Raven's Progressive Matrices."""
+
+    SKIP = -1
+    PROBLEM_FIGURE_NAMES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
+    SOLUTION_FIGURE_NAMES = ['1', '2', '3', '4', '5', '6']
 
     @staticmethod
     def generate_problem_images(problem):
@@ -66,9 +127,6 @@ class Agent:
                 solution_figures[figure.name] = image_details
         return problem_figures, solution_figures
 
-    def __init__(self):
-        pass
-
     def Solve(self, problem):
         """The main agent method called for each problem.
 
@@ -82,44 +140,43 @@ class Agent:
 
         if not problem.hasVisual:
             return Agent.SKIP
-        if problem.problemType != '2x2':
-            return Agent.SKIP
 
         if problem.problemType == '2x2':
-            solution_map = {'AB': 'C',
-                            'AC': 'B'}
-
-        problem_figures = {}
-        solution_figures = {}
+            solution_map = {'AB': 'C', 'AC': 'B', 'BC': 'A'}
+        else:
+            solution_map = {'AB': 'H', 'BC': 'H', 'DE': 'H', 'EF': 'H',
+                            'GH': 'H', 'AD': 'F', 'DG': 'F', 'BE': 'F',
+                            'EH': 'F', 'CF': 'F', 'AE': 'E', 'CD': 'E',
+                            'DH': 'E', 'BF': 'E', 'FG': 'E'}
 
         problem_figures, solution_figures = \
             Agent.generate_problem_images(problem)
 
-        closest_match = dict(name='-1', difference=1.00)
+        closest_match = {'name': '-1', 'difference': 1.00}
 
-        # Compare the pixel ratio from A->B and compare C with each solution
+        # See solution map.
+        # Example: 2x2 matrix
+        # from_pair: 'AB'
+        # apply_to: 'C'
         for from_pair, apply_to in solution_map.iteritems():
-            image1_pixels = problem_figures[from_pair[FIRST]]['pixels']
-            image2_pixels = problem_figures[from_pair[SECOND]]['pixels']
-            match = Agent.pixel_match_percentage(image1_pixels, image2_pixels)
-            solution_matches = {}
-            for solution_figure_name, solution_figure in \
+            # Find the match between all transformations between the two images.
+            image1_data = problem_figures[from_pair[FIRST]]
+            image2_data = problem_figures[from_pair[SECOND]]
+            images_transformations = \
+                Transform.generate_transforms_data(image1_data, image2_data)
+            apply_to_image_data = problem_figures[apply_to]
+            # Loop over each solution image.
+            for solution_name, solution_image_data in \
                     solution_figures.iteritems():
-                apply_to_image_pixels = problem_figures[apply_to]['pixels']
-                solution_matches[solution_figure_name] = \
-                    Agent.pixel_match_percentage(apply_to_image_pixels,
-                                                 solution_figure['pixels'])
-
-            for solution_figure_name, solution_match in \
-                    solution_matches.iteritems():
-                if solution_match == match:
-                    return int(solution_figure_name)
-
-            for solution_figure_name, solution_match in \
-                    solution_matches.iteritems():
-                match_difference = math.fabs(solution_match - match)
-                if match_difference < closest_match['difference']:
-                    closest_match['name'] = solution_figure_name
-                    closest_match['difference'] = match_difference
+                # Loop over each transformation and see if the transformations
+                # match up.
+                for transformation in images_transformations.itervalues():
+                    apply_to_image_match = transformation.apply_and_compare(
+                        apply_to_image_data, solution_image_data)
+                    match_difference = \
+                        math.fabs(apply_to_image_match - transformation.match)
+                    if match_difference < closest_match['difference']:
+                        closest_match['name'] = solution_name
+                        closest_match['difference'] = match_difference
 
         return int(closest_match['name'])
