@@ -20,17 +20,23 @@ class Transform:
 
         return dict(
             unchanged=Transform('unchanged', image1_data, image2_data),
-            reflected=Transform('reflected', image1_data, image2_data),
-            rotated=Transform('rotated', image1_data, image2_data)
-            #fill_changed=Transform('fill_changed', image1_data, image2_data)
+            reflected_vert=Transform(
+                'reflected_vert', image1_data, image2_data),
+            relfected_horiz=Transform(
+                'reflected_horiz', image1_data, image2_data),
+            rotated_90=Transform('rotated_90', image1_data, image2_data),
+            rotated_180=Transform('rotated_180', image1_data, image2_data),
+            rotated_270=Transform('rotated_270', image1_data, image2_data)
         )
 
     def __init__(self, name, image1_data, image2_data):
         self.transformations_map = {
             'unchanged': self.match_unchanged,
-            'reflected': self.match_reflected,
-            'rotated': self.match_rotated,
-            'filled_changed': self.match_fill_changed
+            'reflected_vert': self.match_reflected_vert,
+            'reflected_horiz': self.match_reflected_horiz,
+            'rotated_90': self.match_rotated_90,
+            'rotated_180': self.match_rotated_180,
+            'rotated_270': self.match_rotated_270
         }
 
         self.name = name
@@ -39,59 +45,39 @@ class Transform:
         self.match = self.transformations_map[name](image1_data, image2_data)
 
     def match_unchanged(self, image1_data, image2_data):
-        return ImageUtils \
-            .match_percentage(image1_data['pixels'], image2_data['pixels'])
+        return ImageUtils.match_percentage(
+            image1_data['pixels'], image2_data['pixels']
+        )
 
-    def match_reflected(self, image1_data, image2_data):
-        if hasattr(self, 'orientation'):
-            image1_reflected = image1_data['image'].transpose(self.orientation)
-            return ImageUtils.match_percentage(
-                image1_reflected.getdata(), image2_data['pixels'])
-        else:
-            image1_reflected_vert = \
-                image1_data['image'].transpose(Image.FLIP_TOP_BOTTOM)
-            reflected_vert_match = ImageUtils.match_percentage(
-                image1_reflected_vert.getdata(), image2_data['pixels'])
-            image1_reflected_horiz = \
-                image1_data['image'].transpose(Image.FLIP_LEFT_RIGHT)
-            reflected_horiz_match = ImageUtils.match_percentage(
-                image1_reflected_horiz.getdata(), image2_data['pixels'])
-            max_match = max([reflected_vert_match, reflected_horiz_match])
-            if max_match == reflected_vert_match:
-                self.orientation = Image.FLIP_TOP_BOTTOM
-            else:  # max_match == reflected_horiz_match
-                self.orientation = Image.FLIP_LEFT_RIGHT
-            return max_match
+    def match_reflected_vert(self, image1_data, image2_data):
+        return ImageUtils.match_percentage(
+            image1_data['image'].transpose(Image.FLIP_TOP_BOTTOM).getdata(),
+            image2_data['pixels']
+        )
 
-    def match_rotated(self, image1_data, image2_data):
-        if hasattr(self, 'rotation'):
-            image1_rotated = image1_data['image'].transpose(self.rotation)
-            return ImageUtils.match_percentage(
-                image1_rotated.getdata(), image2_data['pixels'])
-        else:
-            image1_rotated_90 = image1_data['image'].transpose(Image.ROTATE_90)
-            rotated_90_match = ImageUtils.match_percentage(
-                image1_rotated_90.getdata(), image2_data['pixels'])
-            image1_rotated_180 = \
-                image1_data['image'].transpose(Image.ROTATE_180)
-            rotated_180_match = ImageUtils.match_percentage(
-                image1_rotated_180.getdata(), image2_data['pixels'])
-            image1_rotated_270 = \
-                image1_data['image'].transpose(Image.ROTATE_270)
-            rotated_270_match = ImageUtils.match_percentage(
-                image1_rotated_270.getdata(), image2_data['pixels'])
-            max_match = \
-                max([rotated_90_match, rotated_180_match, rotated_270_match])
-            if max_match == rotated_90_match:
-                self.rotation = Image.ROTATE_90
-            elif max_match == rotated_180_match:
-                self.rotation = Image.ROTATE_180
-            else:  # max_match == rotated_270_match
-                self.rotation = Image.ROTATE_270
-            return max_match
+    def match_reflected_horiz(self, image1_data, image2_data):
+        return ImageUtils.match_percentage(
+            image1_data['image'].transpose(Image.FLIP_LEFT_RIGHT).getdata(),
+            image2_data['pixels']
+        )
 
-    def match_fill_changed(self, image1_data, image2_data):
-        pass
+    def match_rotated_90(self, image1_data, image2_data):
+        return ImageUtils.match_percentage(
+            image1_data['image'].transpose(Image.ROTATE_90).getdata(),
+            image2_data['pixels']
+        )
+
+    def match_rotated_180(self, image1_data, image2_data):
+        return ImageUtils.match_percentage(
+            image1_data['image'].transpose(Image.ROTATE_180).getdata(),
+            image2_data['pixels']
+        )
+
+    def match_rotated_270(self, image1_data, image2_data):
+        return ImageUtils.match_percentage(
+            image1_data['image'].transpose(Image.ROTATE_270).getdata(),
+            image2_data['pixels']
+        )
 
     def apply_and_compare(self, image1_data, image2_data):
         """Applies this transformation to image1 and compares with image2."""
