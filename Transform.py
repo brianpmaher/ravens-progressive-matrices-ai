@@ -18,16 +18,33 @@ class Transform:
                 dict(transform, match).
         """
 
-        return dict(
+        transformations = dict(
             unchanged=Transform('unchanged', image1_data, image2_data),
             reflected_vert=Transform(
                 'reflected_vert', image1_data, image2_data),
-            relfected_horiz=Transform(
+            reflected_horiz=Transform(
                 'reflected_horiz', image1_data, image2_data),
             rotated_90=Transform('rotated_90', image1_data, image2_data),
             rotated_180=Transform('rotated_180', image1_data, image2_data),
             rotated_270=Transform('rotated_270', image1_data, image2_data)
         )
+
+        transformations_names = [
+            'unchanged',
+            'reflected_vert',
+            'reflected_horiz',
+            'rotated_90',
+            'rotated_180',
+            'rotated_270'
+        ]
+
+        best_match = transformations['unchanged']
+        for transformation in transformations_names:
+            if transformations[transformation].match > best_match.match:
+                best_match = transformations[transformation]
+                if best_match.match > .99:
+                    break
+        return {best_match.name: best_match}
 
     def __init__(self, name, image1_data, image2_data):
         self.transformations_map = {
