@@ -20,3 +20,11 @@ class ImageUtils:
             else:
                 total += 1
         return float(match) / float(total)
+
+    @staticmethod
+    def black_pixel_count(image_pixels):
+        black = 0
+        for i in range(len(image_pixels)):
+            if image_pixels[i] == (0, 0, 0, 255):
+                black += 1
+        return black
