@@ -42,7 +42,7 @@ class Transform:
         for transformation in transformations_names:
             if transformations[transformation].match > best_match.match:
                 best_match = transformations[transformation]
-                if best_match.match > .99:
+                if best_match.match > .98:
                     break
         return {best_match.name: best_match}
 
