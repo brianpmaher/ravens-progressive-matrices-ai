@@ -136,7 +136,12 @@ class Agent:
                     apply_to_image_black_count - solution_image_black_count
                 match_difference = math.fabs(
                     black_pixel_change - apply_to_solution_black_pixel_change)
-                if match_difference < closest_match['difference']:
+                if match_difference != closest_match['difference'] \
+                        and math.fabs(
+                            match_difference - closest_match['difference']) \
+                                < 100:
+                    continue
+                if match_difference <= closest_match['difference']:
                     closest_match['name'] = solution_name
                     closest_match['difference'] = match_difference
 
