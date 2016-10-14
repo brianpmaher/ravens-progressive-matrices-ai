@@ -111,7 +111,7 @@ class Agent:
             solution_map = {'AB': 'C', 'AC': 'B'}  # , 'BC': 'A'}
         else:
             solution_map = {
-                'GH': 'H', 'CF': 'F', 'AE': 'E'
+                'GH': 'H', 'CF': 'F'
             }
 
         problem_figures, solution_figures = \
