@@ -1,4 +1,3 @@
-from PIL import Image
 import numpy as np
 
 BLACK_PIXEL = (0, 0, 0, 255)
