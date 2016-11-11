@@ -1,14 +1,15 @@
 from ProblemClasses.Base import Base
 from ProblemClasses.Unchanged import Unchanged
 from ProblemClasses.Union import Union
-from ProblemClasses.Intersect import Intersect
+from ProblemClasses.Intersection import Intersection
+from ProblemClasses.Disjunction import Disjunction
 from PIL import Image
 from ImageUtils import ImageUtils
 
 
 class Agent:
     PROBLEM_SETS = ['D', 'E']
-    PROBLEM_CLASSES = [Unchanged, Union, Intersect]
+    PROBLEM_CLASSES = [Unchanged, Union, Intersection, Disjunction]
 
     def __init__(self):
         self.problem = None
