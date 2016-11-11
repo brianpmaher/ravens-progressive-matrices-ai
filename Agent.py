@@ -1,13 +1,14 @@
 from ProblemClasses.Base import Base
 from ProblemClasses.Unchanged import Unchanged
 from ProblemClasses.Union import Union
+from ProblemClasses.Intersect import Intersect
 from PIL import Image
 from ImageUtils import ImageUtils
 
 
 class Agent:
     PROBLEM_SETS = ['D', 'E']
-    PROBLEM_CLASSES = [Unchanged, Union]
+    PROBLEM_CLASSES = [Unchanged, Union, Intersect]
 
     def __init__(self):
         self.problem = None
@@ -18,9 +19,6 @@ class Agent:
 
         if self.problem.problemSetName.split(' ')[-1] not in Agent.PROBLEM_SETS:
             return Base.SKIP
-
-        if self.problem.problemSetName == 'Basic Problems E':
-            pass
 
         self.__get_problem_data()
         problem_class = self.__classify_problem()

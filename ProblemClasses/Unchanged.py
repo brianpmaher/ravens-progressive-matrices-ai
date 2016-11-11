@@ -63,6 +63,4 @@ class Unchanged(Base):
                         avg_match = (match_stats[0] + match_stats[1]) / 2.0
                         solutions[int(solution)] = avg_match
 
-        # Returns the key for the max value. Adapted from a Stackoverflow
-        # response: http://stackoverflow.com/a/268285
         return max(solutions.iteritems(), key=operator.itemgetter(1))[0]
