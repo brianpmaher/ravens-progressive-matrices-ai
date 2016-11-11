@@ -24,8 +24,8 @@ class LogicalOperator(Base):
 
     @classmethod
     def __is_operator(cls, fig_1, fig_2, result):
-        union = cls.do_operator(fig_1, fig_2)
-        return Unchanged.is_match(union, result)
+        post_op = cls.do_operator(fig_1, fig_2)
+        return Unchanged.is_match(post_op, result)
 
     @staticmethod
     def do_operator(fig_1, fig_2):
