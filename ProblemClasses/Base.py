@@ -1,7 +1,7 @@
 class Base:
     SKIP = -1
     PROBLEM_FIGURE_KEYS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
-    SOLUTION_FIGURE_KEYS = ['1', '2', '3', '4', '5', '6', '7']
+    SOLUTION_FIGURE_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8']
 
     # A   B   C   <-- TRANS_ROW : The row to detect the transformation
     # D   E   F   <-- TEST_ROW  : The row to test the transformation
