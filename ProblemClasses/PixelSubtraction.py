@@ -1,9 +1,8 @@
 from Base import Base
-from Unchanged import Unchanged
+import math
 import operator
 
-
-class LogicalOperator(Base):
+class PixelSubtraction(Base):
     @classmethod
     def is_class(cls, problem_figures):
         for trans_group in Base.TRANS_GROUPS:
@@ -22,25 +21,24 @@ class LogicalOperator(Base):
 
         return False
 
-    @classmethod
-    def is_operator(cls, fig_1, fig_2, result):
-        post_op = cls.do_operator(fig_1, fig_2)
-        return cls.is_match(post_op, result)
-
-    @staticmethod
-    def is_match(fig_1, fig_2):
-        return Unchanged.is_match(fig_1, fig_2)
-
     @staticmethod
     def do_operator(fig_1, fig_2):
-        raise NotImplementedError
+        return math.fabs(sum(fig_1) - sum(fig_2))
+
+    @staticmethod
+    def match_percent(sum_fig_1, sum_fig_2):
+        min_sum = min(sum_fig_1, sum_fig_2)
+        max_sum = max(sum_fig_1, sum_fig_2)
+        return min_sum / max_sum
+
+    @classmethod
+    def is_operator(cls, fig_1, fig_2, result):
+        diff = cls.do_operator(fig_1, fig_2)
+        sum_res = sum(result)
+        return cls.match_percent(diff, sum_res) >= 0.97
 
     def __init__(self, problem_figures):
         self.problem_figures = problem_figures
-
-    @staticmethod
-    def match_stats(fig_1, fig_2):
-        return Unchanged.match_stats(fig_1, fig_2)
 
     def solve(self):
         solutions = {Base.SKIP: Base.SKIP}
@@ -51,13 +49,11 @@ class LogicalOperator(Base):
             post_op = self.__class__.do_operator(app_1, app_2)
 
             for solution in Base.SOLUTION_FIGURE_KEYS:
-                solution_fig = self.problem_figures[solution]
+                solution_fig_sum = sum(self.problem_figures[solution])
 
-                match_stats = \
-                    self.__class__.match_stats(post_op, solution_fig)
-
-                if self.__class__.is_operator(app_1, app_2, solution_fig):
-                    avg_match = (match_stats[0] + match_stats[1]) / 2.0
-                    solutions[int(solution)] = avg_match
+                match_percent = \
+                    self.__class__.match_percent(post_op, solution_fig_sum)
+                if match_percent >= 0.97:
+                    solutions[int(solution)] = match_percent
 
         return max(solutions.iteritems(), key=operator.itemgetter(1))[0]
