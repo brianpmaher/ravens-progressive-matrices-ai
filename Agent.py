@@ -4,6 +4,7 @@ from ProblemClasses.Union import Union
 from ProblemClasses.Intersection import Intersection
 from ProblemClasses.Disjunction import Disjunction
 from ProblemClasses.PixelSubtraction import PixelSubtraction
+from ProblemClasses.PixelAddition import PixelAddition
 from PIL import Image
 from ImageUtils import ImageUtils
 
@@ -11,7 +12,7 @@ from ImageUtils import ImageUtils
 class Agent:
     PROBLEM_SETS = ['D', 'E']
     PROBLEM_CLASSES = [Unchanged, Union, Intersection, Disjunction,
-                       PixelSubtraction]
+                       PixelSubtraction, PixelAddition]
 
     def __init__(self):
         self.problem = None
@@ -29,17 +30,12 @@ class Agent:
         if problem_class is None:
             return Base.SKIP
 
-        if self.problem.name == 'Basic Problem D-02':
-            pass
-
         problem_solver = problem_class(self.problem_figures)
 
         return problem_solver.solve()
 
     def __classify_problem(self):
         for ProblemClass in Agent.PROBLEM_CLASSES:
-            if self.problem.name == 'Basic Problem E-04':
-                pass
             if ProblemClass.is_class(self.problem_figures):
                 print self.problem.name + ' class: ' \
                       + str(ProblemClass.__name__)
