@@ -29,6 +29,9 @@ class Agent:
         if problem_class is None:
             return Base.SKIP
 
+        if self.problem.name == 'Basic Problem D-02':
+            pass
+
         problem_solver = problem_class(self.problem_figures)
 
         return problem_solver.solve()

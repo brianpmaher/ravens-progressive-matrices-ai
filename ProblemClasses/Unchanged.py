@@ -59,7 +59,8 @@ class Unchanged(Base):
                     match_stats = \
                         Unchanged.match_stats(solution_fig, app_1)
 
-                    if Unchanged.is_match(solution_fig, app_1):
+                    if Unchanged.is_match(solution_fig, app_1) and \
+                            Unchanged.is_match(solution_fig, app_2):
                         avg_match = (match_stats[0] + match_stats[1]) / 2.0
                         solutions[int(solution)] = avg_match
 
