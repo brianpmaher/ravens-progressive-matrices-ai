@@ -1,14 +1,16 @@
-from ProblemClasses.Base import Base
-from ProblemClasses.Unchanged import Unchanged
-from ProblemClasses.Union import Union
-from ProblemClasses.Intersection import Intersection
-from ProblemClasses.Disjunction import Disjunction
-from ProblemClasses.PixelSubtraction import PixelSubtraction
-from ProblemClasses.PixelAddition import PixelAddition
-from Transform import Transform
-from PIL import Image
-from ImageUtils import ImageUtils
 import math
+from PIL import Image
+
+from Base import Base
+from Disjunction import Disjunction
+from Intersection import Intersection
+from PixelAddition import PixelAddition
+from PixelSubtraction import PixelSubtraction
+from Union import Union
+
+from ImageUtils import ImageUtils
+from Transform import Transform
+from Unchanged import Unchanged
 
 
 class Agent:
