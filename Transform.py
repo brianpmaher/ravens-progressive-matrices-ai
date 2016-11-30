@@ -8,7 +8,7 @@ class Transform:
         """Generates transformations along with percentage matches.
 
         Args:
-            image1_data (dict): Dictionary of image data in the form:
+            image2_data (dict): Dictionary of image data in the form:
                 dict(image, pixels).
             image2_data (dict): Dictionary of image data in the form:
                 dict(image, pixels).

@@ -1,4 +1,21 @@
+import numpy as np
+
+BLACK_PIXEL = (0, 0, 0, 255)
+
+
 class ImageUtils:
+    @staticmethod
+    def get_image_data(image):
+        image_data = []
+
+        for pixel in image.getdata():
+            if pixel == BLACK_PIXEL:
+                image_data.append(1)
+            else:
+                image_data.append(0)
+
+        return np.int_(image_data)
+
     @staticmethod
     def match_percentage(image1_pixels, image2_pixels):
         """Compares two image's pixels and returns the percentage that those
@@ -28,3 +45,6 @@ class ImageUtils:
             if image_pixels[i] == (0, 0, 0, 255):
                 black += 1
         return black
+
+    def __init__(self):
+        pass
