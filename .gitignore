@@ -1,0 +1,9 @@
+*.pyc
+.idea
+.~lock*
+.temp
+AgentAnswers.csv
+ProblemResults.csv
+SetResults.csv
+student.zip
+.bonnie/
